@@ -7,16 +7,9 @@ fun String.stripHtml(): String {
 }
 
 fun String.truncate(symbolsAmount: Int = 16): String {
-
-    val originalString: String = this
-    val resultingString: String = this.substring(0, symbolsAmount)
-    return if (resultingString.length <= originalString.length) {
-        originalString
-    } else {
-        if (resultingString.endsWith(" ")) {
-            resultingString.substring(0, resultingString.length - 1).plus("...")
-        } else {
-            resultingString.plus("...")
-        }
-    }
+    val resultingString = this.trim()
+    return if (resultingString.length <= symbolsAmount) resultingString else resultingString.substring(
+        0,
+        symbolsAmount
+    ).trim() + "..."
 }

@@ -3,10 +3,11 @@ package ru.skillbranch.devintensive.utils
 object Utils {
 
     fun parseFullName(fullName: String?): Pair<String?, String?> {
-        val pairs = fullName?.split(" ")
-        if (fullName?.trim() == "")
-            return null to null
-        return (pairs?.getOrNull(0) ?: "null") to (pairs?.getOrNull(1) ?: "null")
+        val parts = fullName?.trim()?.split(" ")
+        val firstName = parts?.getOrNull(0)?.ifEmpty { null }
+        val lastName = parts?.getOrNull(1)?.ifEmpty { null }
+
+        return firstName to lastName
     }
 
     fun toInitials(firstName: String?, lastName: String?): String? {
@@ -20,114 +21,61 @@ object Utils {
         return "$a$b".toUpperCase()
     }
 
-    fun transliteration(fullName: String?, divider: String? = ""): String? {
+    fun transliteration(payload: String, divider: String = " "): String {
+        val map = fillTranslitMap()
+        val builder = StringBuilder()
 
-        var currentDivider: String = " "
-        if (!divider.isNullOrEmpty()) {
-            currentDivider = divider
-        }
-        val name: Pair<String?, String?> = parseFullName(fullName)
-        var transFirstName: String? = name.first
-        if (transFirstName != null) {
-            transFirstName = ""
-            name.first?.asIterable()?.forEach { letter ->
-                transFirstName = transFirstName.plus(replaceLetter(letter.toString(), letter.isUpperCase()))
-            }
-        }
+        for (char in payload.trim())
+            builder.append(getTranslChar(char, map))
 
-        var transLastName: String? = name.second
-        if (transLastName != null) {
-            transLastName = ""
-            name.second?.asIterable()?.forEach { letter ->
-                transLastName = transLastName.plus(replaceLetter(letter.toString(), letter.isUpperCase()))
-            }
-        }
-
-        return "$transFirstName$currentDivider$transLastName"
+        return builder.toString().replace(" ", divider)
     }
 
-    fun replaceLetter(letter: String, isUpperCase: Boolean): String {
-        var currentLetter: String = letter
-        if (isUpperCase) {
-            currentLetter = letter.toLowerCase()
-        }
-        return when (currentLetter) {
-            "а" -> handleLetterCase("a", isUpperCase)
+    private fun getTranslChar(char: Char, map: HashMap<Char, String>): String {
+        val transl = map[char.toLowerCase()] ?: char.toString()
 
-            "б" -> handleLetterCase("b", isUpperCase)
-
-            "в" -> handleLetterCase("v", isUpperCase)
-
-            "г" -> handleLetterCase("g", isUpperCase)
-
-            "д" -> handleLetterCase("d", isUpperCase)
-
-            "е" -> handleLetterCase("e", isUpperCase)
-
-            "ё" -> handleLetterCase("e", isUpperCase)
-
-            "ж" -> { if (isUpperCase) { "Zh" } else { "zh" } }
-
-            "з" -> handleLetterCase("z", isUpperCase)
-
-            "и" -> handleLetterCase("i", isUpperCase)
-
-            "й" -> handleLetterCase("i", isUpperCase)
-
-            "к" -> handleLetterCase("k", isUpperCase)
-
-            "л" -> handleLetterCase("l", isUpperCase)
-
-            "м" -> handleLetterCase("m", isUpperCase)
-
-            "н" -> handleLetterCase("n", isUpperCase)
-
-            "о" -> handleLetterCase("o", isUpperCase)
-
-            "п" -> handleLetterCase("p", isUpperCase)
-
-            "р" -> handleLetterCase("r", isUpperCase)
-
-            "с" -> handleLetterCase("s", isUpperCase)
-
-            "т" -> handleLetterCase("t", isUpperCase)
-
-            "у" -> handleLetterCase("u", isUpperCase)
-
-            "ф" -> handleLetterCase("f", isUpperCase)
-
-            "х" -> handleLetterCase("h", isUpperCase)
-
-            "ц" -> handleLetterCase("c", isUpperCase)
-
-            "ч" -> { if (isUpperCase) { "Ch" } else { "ch" } }
-
-            "ш" -> { if (isUpperCase) { "Sh" } else { "sh" } }
-
-            "щ" -> { if (isUpperCase) { "Sh'" } else { "sh'" } }
-
-            "ъ" -> handleLetterCase("", isUpperCase)
-
-            "ы" -> handleLetterCase("i", isUpperCase)
-
-            "ь" -> handleLetterCase("", isUpperCase)
-
-            "э" -> handleLetterCase("e", isUpperCase)
-
-            "ю" -> { if (isUpperCase) { "Yu" } else { "yu" } }
-
-            "я" -> { if (isUpperCase) { "Ya" } else { "ya" } }
-
-            else -> handleLetterCase(letter, isUpperCase)
-        }
+        return if (char.isUpperCase() && transl.isNotEmpty())
+            transl.capitalize()
+        else transl
     }
 
-    fun handleLetterCase(letter: String, isUpperCase: Boolean): String {
-        return if (isUpperCase) {
-            letter.toUpperCase()
-        } else {
-            letter
-        }
+    private fun fillTranslitMap(): HashMap<Char, String> {
+        val map = hashMapOf<Char, String>()
+        map['а'] = "a"
+        map['б'] = "b"
+        map['в'] = "v"
+        map['г'] = "g"
+        map['д'] = "d"
+        map['е'] = "e"
+        map['ё'] = "e"
+        map['ж'] = "zh"
+        map['з'] = "z"
+        map['и'] = "i"
+        map['й'] = "i"
+        map['к'] = "k"
+        map['л'] = "l"
+        map['м'] = "m"
+        map['н'] = "n"
+        map['о'] = "o"
+        map['п'] = "p"
+        map['р'] = "r"
+        map['с'] = "s"
+        map['т'] = "t"
+        map['у'] = "u"
+        map['ф'] = "f"
+        map['х'] = "h"
+        map['ц'] = "c"
+        map['ч'] = "ch"
+        map['ш'] = "sh"
+        map['щ'] = "sh'"
+        map['ъ'] = ""
+        map['ы'] = "i"
+        map['ь'] = ""
+        map['э'] = "e"
+        map['ю'] = "yu"
+        map['я'] = "ya"
+
+        return map
     }
 
 }
