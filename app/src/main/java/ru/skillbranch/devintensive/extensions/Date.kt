@@ -3,85 +3,79 @@ package ru.skillbranch.devintensive.extensions
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
-
-const val SECOND = 1000L
-const val MINUTE = 60 * SECOND
-const val HOUR = 60 * MINUTE
-const val DAY = 24 * HOUR
+import ru.skillbranch.devintensive.extensions.TimeUnits.*
 
 fun Date.format(pattern: String = "HH:mm:ss dd.MM.yy"): String {
     val dateFormat = SimpleDateFormat(pattern, Locale("ru"))
     return dateFormat.format(this)
 }
 
-fun Date.add(value: Int, units: TimeUnits = TimeUnits.SECOND): Date {
-    var time = this.time
-
-    time += when (units) {
-        TimeUnits.DAY -> value * DAY
-        TimeUnits.SECOND -> value * SECOND
-        TimeUnits.MINUTE -> value * MINUTE
-        TimeUnits.HOUR -> value * HOUR
-    }
-
-    this.time = time
+fun Date.add(value: Int, units: TimeUnits = SECOND): Date {
+    this.time += units.value * value
     return this
 }
 
 fun Date.humanizeDiff(date: Date = Date()): String {
+    val dif = abs(this.time - date.time)
+    val isPast = this.time < date.time
 
-    var res: String
-
-    var diff = (Date().time - date.time) / 1000
-
-    var min = diff / 60
-    var hour = min / 60
-    var day = hour / 24
-
-    if (diff < 0) {
-
-        diff--
-        min = diff / 60
-        hour = min / 60
-        day = hour / 24
-        min = abs(min)
-        hour = abs(hour)
-        day = abs(day)
+    return when {
+        dif <= SECOND.value -> "только что"
+        dif <= SECOND.value * 45 -> getTenseForm("несколько секунд", isPast)
+        dif <= SECOND.value * 75 -> getTenseForm("минуту", isPast)
+        dif <= MINUTE.value * 45 -> getTenseForm(MINUTE.plural((dif / MINUTE.value).toInt()), isPast)
+        dif <= MINUTE.value * 75 -> getTenseForm("час", isPast)
+        dif <= HOUR.value * 22 -> getTenseForm(HOUR.plural((dif / HOUR.value).toInt()), isPast)
+        dif <= HOUR.value * 26 -> getTenseForm("день", isPast)
+        dif <= DAY.value * 360 -> getTenseForm(DAY.plural((dif / DAY.value).toInt()), isPast)
+        else -> if (isPast) "более года назад" else "более чем через год"
     }
-
-    when (diff) {
-        in -1..0 -> res = "через секунду"
-        in -45..-1 -> res = "через несколько секунд"
-        in -75..-45 -> res = "через минуту"
-        in -45 * 60..-75 -> res =
-            "через $min ${if ((min % 10 == 0L) or (min % 10 == 5L) or (min % 10 == 6L) or (min % 10 == 7L) or (min % 10 == 8L) or (min % 10 == 9L) or ((min > 10L) and (min < 20L))) "минут" else if ((min % 10 == 2L) or (min % 10 == 3L) or (min % 10 == 4L)) "минуты" else "минуту"}"
-        in -75 * 60..-45 * 60 -> res = "через час"
-        in -22 * 60 * 60..-75 * 60 -> res =
-            "через $hour ${if ((min % 10 == 0L) or (min % 10 == 5L) or (min % 10 == 6L) or (min % 10 == 7L) or (min % 10 == 8L) or (min % 10 == 9L) or ((min > 10L) and (min < 20L))) "часов" else if ((min % 10 == 2L) or (min % 10 == 3L) or (min % 10 == 4L)) "часа" else "час"}"
-        in -26 * 60 * 60..-22 * 60 * 60 -> res = "через день"
-        in -360 * 24 * 60 * 60..-26 * 60 * 60 -> res =
-            "через $day ${if ((min % 10 == 0L) or (min % 10 == 5L) or (min % 10 == 6L) or (min % 10 == 7L) or (min % 10 == 8L) or (min % 10 == 9L) or ((min > 10L) and (min < 20L))) "дней" else if ((min % 10 == 2L) or (min % 10 == 3L) or (min % 10 == 4L)) "дня" else "день"}"
-        in 0..1 -> res = "только что"
-        in 1..45 -> res = "несколько секунд назад"
-        in 45..75 -> res = "минуту назад"
-        in 75..45 * 60 -> res =
-            "$min ${if ((min % 10 == 0L) or (min % 10 == 5L) or (min % 10 == 6L) or (min % 10 == 7L) or (min % 10 == 8L) or (min % 10 == 9L) or ((min > 10L) and (min < 20L))) "минут" else if ((min % 10 == 2L) or (min % 10 == 3L) or (min % 10 == 4L)) "минуты" else "минуту"} назад"
-        in 45 * 60..75 * 60 -> res = "час назад"
-        in 75 * 60..22 * 60 * 60 -> res =
-            "$hour ${if ((min % 10 == 0L) or (min % 10 == 5L) or (min % 10 == 6L) or (min % 10 == 7L) or (min % 10 == 8L) or (min % 10 == 9L) or ((min > 10L) and (min < 20L))) "часов" else if ((min % 10 == 2L) or (min % 10 == 3L) or (min % 10 == 4L)) "часа" else "час"} назад"
-        in 22 * 60 * 60..26 * 60 * 60 -> res = "день назад"
-        in 26 * 60 * 60..360 * 24 * 60 * 60 -> res =
-            "$day ${if ((min % 10 == 0L) or (min % 10 == 5L) or (min % 10 == 6L) or (min % 10 == 7L) or (min % 10 == 8L) or (min % 10 == 9L) or ((min > 10L) and (min < 20L))) "дней" else if ((min % 10 == 2L) or (min % 10 == 3L) or (min % 10 == 4L)) "дня" else "день"} назад"
-        else -> {
-            res = when {
-                diff > 360 * 24 * 60 * 60 -> "более года назад"
-                else -> "более чем через год"
-            }
-        }
-    }
-    return res
 }
 
-enum class TimeUnits {
-    SECOND, MINUTE, HOUR, DAY
+fun getTenseForm(interval: String, isPast: Boolean): String {
+    val prefix = if (isPast) "" else "через"
+    val postfix = if (isPast) "назад" else ""
+    return "$prefix $interval $postfix".trim()
+}
+
+fun getPluralForm(amount: Int, units: TimeUnits): String {
+    val posAmount = abs(amount) % 100
+
+    return when (posAmount) {
+        1 -> Plurals.ONE.get(units)
+        in 2..4 -> Plurals.FEW.get(units)
+        0, in 5..19 -> Plurals.MANY.get(units)
+        else -> getPluralForm(posAmount % 10, units)
+    }
+}
+
+enum class Plurals(
+    private val second: String,
+    private val minute: String,
+    private val hour: String,
+    private val day: String
+) {
+    ONE("секунду", "минуту", "час", "день"),
+    FEW("секунды", "минуты", "часа", "дня"),
+    MANY("секунд", "минут", "часов", "дней");
+
+    fun get(unit: TimeUnits): String {
+        return when (unit) {
+            SECOND -> second
+            MINUTE -> minute
+            HOUR -> hour
+            DAY -> day
+        }
+    }
+}
+
+enum class TimeUnits(val value: Long) {
+    SECOND(1000L),
+    MINUTE(60 * SECOND.value),
+    HOUR(60 * MINUTE.value),
+    DAY(24 * HOUR.value);
+
+    fun plural(value: Int): String {
+        return "$value ${getPluralForm(value, this)}"
+    }
 }

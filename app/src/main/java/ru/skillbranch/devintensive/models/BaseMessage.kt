@@ -21,7 +21,7 @@ abstract class BaseMessage(
             date: Date = Date(),
             type: String = "text",
             payload: Any?,
-            isIncoming: Boolean
+            isIncoming: Boolean = false
         ): BaseMessage {
             lastId++
             return when (type) {
